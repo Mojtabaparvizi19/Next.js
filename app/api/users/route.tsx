@@ -15,14 +15,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  //validate
-  //if invalide return 400,
-  //else, => return
-
   const body: BodyProp = await request.json();
-  //   if (!body.name)
-  //     return NextResponse.json({ error: "Name is required" }, { status: 400 });
-
   const validate = schema.safeParse(body);
   if (!validate.success) {
     return NextResponse.json(validate.error.errors, { status: 400 });

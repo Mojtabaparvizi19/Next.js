@@ -21,3 +21,12 @@ model User {
   isActive  Boolean  @default(true)
   timeOfReg DateTime @default(now())
 }
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String   
+  price     Int
+  isActive  Boolean  @default(true)
+  timeOfReq DateTime @default(now())
+  category  String
+}

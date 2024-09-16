@@ -1,41 +1,77 @@
 import { NextRequest, NextResponse } from "next/server";
-import schema from "../schema";
-import { allProduct } from "../route";
-import { BodyProp } from "../../users/route";
+import productSchema from "../schema";
+import prisma from "@/prisma/client";
 
 interface Props {
-  params: { id: number };
+  params: { id: string };
 }
 
-export function GET(request: NextRequest, { params: { id } }: Props) {
-  if (id > 10) {
-    return NextResponse.json({ error: "Id not valid" }, { status: 404 });
+export interface ProducProps {
+  category: string;
+  name: string;
+  price: number;
+}
+
+export async function GET(request: NextRequest, { params: { id } }: Props) {
+  const itemToFind = await prisma.product.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+  });
+
+  if (!itemToFind) {
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
-  const item = allProduct.find((item) => item.id == id);
-  console.log(item);
-
-  return NextResponse.json(item, { status: 200 });
+  return NextResponse.json(itemToFind, { status: 201 });
 }
 
 export async function PUT(request: NextRequest, { params: { id } }: Props) {
-  const body: BodyProp = await request.json();
+  const itemToUpdate = await prisma.product.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+  });
 
-  console.log(body.name);
-  const validator = schema.safeParse(body);
+  if (!itemToUpdate) {
+    return NextResponse.json({ error: "item not found" }, { status: 404 });
+  }
+
+  const body: ProducProps = await request.json();
+  const validator = productSchema.safeParse(body);
   if (!validator.success) {
     return NextResponse.json(validator.error.errors, { status: 400 });
   }
 
-  if (id > 10) {
-    return NextResponse.json({ error: "Wrong id" }, { status: 404 });
-  }
-  const item = allProduct.find((item) => item.id == id);
-  console.log(item);
-  if (item) {
-    item.name = body.name;
-    item.price = body.price;
+  await prisma.product.update({
+    where: {
+      id: parseInt(id),
+    },
+    data: {
+      category: body.category,
+      name: body.name,
+      price: body.price,
+    },
+  });
+
+  return NextResponse.json({ success: "Item updated" }, { status: 201 });
+}
+
+export async function DELETE(request: NextRequest, { params: { id } }: Props) {
+  const itemToFind = await prisma.product.findUnique({
+    where: {
+      id: parseInt(id),
+    },
+  });
+  if (!itemToFind) {
+    return NextResponse.json({ error: "item not found" }, { status: 404 });
   }
 
-  return NextResponse.json(item, { status: 200 });
+  await prisma.product.delete({
+    where: {
+      id: parseInt(id),
+    },
+  });
+
+  return NextResponse.json({ success: "item deleted" }, { status: 201 });
 }
